@@ -40,6 +40,10 @@ inputs:
     description: "Whether or not you want to do a pull request. Only works when branch name is provided. Default false"
     required: false
     default: 'false'
+  REUSE_PULL_REQUEST:
+    description: "Whether or not you want to re-use existing pull request opened by this workflow. TODO define criterias . Default false"
+    required: false
+    default: 'false'
   SKIP_CI:
     description: "Adds [skip ci] to commit message which will avoid running github actions in targer repository"
     required: false

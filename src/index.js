@@ -97,7 +97,8 @@ async function run() {
 
 			if( 'created' !== status ) {
 				current_branch      = ( PULL_REQUEST ) ? await toolkit.git.currentBranch( local_path ) : false;
-				existing_pull_request = (REUSE_PULL_REQUEST) ? await git_helper.findPullRequest() : ;
+				existing_pull_request = (REUSE_PULL_REQUEST) ? await git_helper.findExistingPullRequest() : false ;
+				console.log(existing_pull_request)
 				pull_request_branch = ( false === existing_pull_request && PULL_REQUEST ) ? await helper.createPullRequestBranch( local_path, current_branch ) : false;
 			}
 

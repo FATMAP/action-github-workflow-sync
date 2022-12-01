@@ -27,6 +27,7 @@ This also isn't limited to Github Action yaml files - another use case could be 
 | `AUTO_CREATE_NEW_BRANCH` | ***false*** | Auto create new brach in a repository if the branch dose not exists |
 | `COMMIT_EACH_FILE` | ***false*** | if you need to keep track of each file's commit history separate then set it to true |
 | `PULL_REQUEST` | **false** | Set to `true` if you want the changes to be pushed via pull request. |
+| `REUSE_PULL_REQUEST` | **false** | Set to `true` if you want the existing pull request to be re-used based of TODO. |
 | `SKIP_CI` | **false** | Set to `true` if you want skip all automations inside target repository. |
 | `COMMIT_MESSAGE` | **false** | You can provide your custom commit message. |
 | `RETRY_MODE` | **true** | Enable retry and throttling octokit plugins to avoid secondary rate limits on github content creation. |
