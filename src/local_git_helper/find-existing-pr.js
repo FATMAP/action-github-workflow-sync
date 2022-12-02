@@ -1,6 +1,6 @@
-const nodeexec = require( '../node-exec' );
+const nodeexec = require( './node-exec' );
 const gh_core  = require( '@actions/core' );
-const log      = require( '../logger/index' );
+const log      = require( './logger/index' );
 const toolkit  = require( 'actions-js-toolkit' );
 
 const findExistingPullRequest = async( local_path ) => {

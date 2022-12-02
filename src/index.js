@@ -6,7 +6,7 @@ const helper     = require( './helper' );
 const octokit    = require("@octokit/core");
 const retry      = require("@octokit/plugin-retry");
 const throttling = require("@octokit/plugin-throttling");
-const git_helper = require('./git_helper');
+const git_helper = require('./local_git_helper/find-existing-pr');
 
 async function run() {
 	let AUTO_CREATE_NEW_BRANCH       = require( './variables' ).AUTO_CREATE_NEW_BRANCH;

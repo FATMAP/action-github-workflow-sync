@@ -10503,37 +10503,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 8398:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-const nodeexec = __webpack_require__( 4328 );
-const gh_core  = __webpack_require__( 2186 );
-const log      = __webpack_require__( 7701 );
-const toolkit  = __webpack_require__( 6338 );
-
-const findExistingPullRequest = async( local_path ) => {
-	let cmd    = `gh pr list --state=open --search-"minor CHORE Files Sync From ${toolkit.input.env( 'GITHUB_REPOSITORY')}"`;
-	let status = false;
-
-	await nodeexec( `${cmd}`).then( (response) => {
-		log.success( 'Existing PR found' );
-		status = response;
-	} ).catch( ( error ) => {
-		log.error( 'Unable to find an existing PR' );
-		gh_core.error( error );
-		status = false;
-	} );
-	return status;
-};
-
-
-module.exports = {
-    findExistingPullRequest: findExistingPullRequest,
-}
-
-
-/***/ }),
-
 /***/ 6989:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -10727,7 +10696,7 @@ const helper     = __webpack_require__( 6989 );
 const octokit    = __webpack_require__(6762);
 const retry      = __webpack_require__(6298);
 const throttling = __webpack_require__(9968);
-const git_helper = __webpack_require__(8398);
+const git_helper = __webpack_require__(4248);
 
 async function run() {
 	let AUTO_CREATE_NEW_BRANCH       = __webpack_require__(3424).AUTO_CREATE_NEW_BRANCH;
@@ -10939,6 +10908,87 @@ run();
 
 /***/ }),
 
+/***/ 4248:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const nodeexec = __webpack_require__( 9621 );
+const gh_core  = __webpack_require__( 2186 );
+const log      = __webpack_require__( 5637 );
+const toolkit  = __webpack_require__( 6338 );
+
+const findExistingPullRequest = async( local_path ) => {
+	let cmd    = `gh pr list --state=open --search-"minor CHORE Files Sync From ${toolkit.input.env( 'GITHUB_REPOSITORY')}"`;
+	let status = false;
+
+	await nodeexec( `${cmd}`).then( (response) => {
+		log.success( 'Existing PR found' );
+		status = response;
+	} ).catch( ( error ) => {
+		log.error( 'Unable to find an existing PR' );
+		gh_core.error( error );
+		status = false;
+	} );
+	return status;
+};
+
+
+module.exports = {
+    findExistingPullRequest: findExistingPullRequest,
+}
+
+
+/***/ }),
+
+/***/ 5637:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const gh_core = __webpack_require__( 2186 );
+const style   = __webpack_require__( 2068 );
+const log     = ( log ) => gh_core.info( `${log}` );
+
+log.success = ( log, before = '' ) => gh_core.info( `${before}✔  ${log}` );
+log.warning = ( log, before = '' ) => gh_core.warning( `${before}⚠️ ${log}` );
+log.error   = ( log, before = '' ) => gh_core.error( `${before}🛑️  ${log}` );
+log.warn    = ( log, before = '' ) => gh_core.info( `${before}⚠️ ${log}` );
+log.err     = ( log, before = '' ) => gh_core.info( `${before}🛑️  ${log}` );
+
+/**
+ * Colored Logs
+ */
+
+log.black         = ( data ) => log( `${style.black.open}${data}${style.black.close}` );
+log.red           = ( data ) => log( `${style.red.open}${data}${style.red.close}` );
+log.green         = ( data ) => log( `${style.green.open}${data}${style.green.close}` );
+log.yellow        = ( data ) => log( `${style.yellow.open}${data}${style.yellow.close}` );
+log.blue          = ( data ) => log( `${style.blue.open}${data}${style.blue.close}` );
+log.magenta       = ( data ) => log( `${style.magenta.open}${data}${style.magenta.close}` );
+log.cyan          = ( data ) => log( `${style.cyan.open}${data}${style.cyan.close}` );
+log.white         = ( data ) => log( `${style.white.open}${data}${style.white.close}` );
+log.gray          = ( data ) => log( `${style.gray.open}${data}${style.gray.close}` );
+log.redBright     = ( data ) => log( `${style.redBright.open}${data}${style.redBright.close}` );
+log.greenBright   = ( data ) => log( `${style.greenBright.open}${data}${style.greenBright.close}` );
+log.yellowBright  = ( data ) => log( `${style.yellowBright.open}${data}${style.yellowBright.close}` );
+log.blueBright    = ( data ) => log( `${style.blueBright.open}${data}${style.blueBright.close}` );
+log.magentaBright = ( data ) => log( `${style.magentaBright.open}${data}${style.magentaBright.close}` );
+log.cyanBright    = ( data ) => log( `${style.cyanBright.open}${data}${style.cyanBright.close}` );
+log.whiteBright   = ( data ) => log( `${style.whiteBright.open}${data}${style.whiteBright.close}` );
+
+
+module.exports = log;
+
+
+/***/ }),
+
+/***/ 9621:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const { exec } = __webpack_require__( 3129 );
+
+module.exports = ( command, workingDir ) => new Promise( ( resolve, reject ) => exec( command, { cwd: workingDir, }, ( error, stdout ) => error ? reject( error ) : resolve( stdout.trim() ) ));
+
+
+/***/ }),
+
 /***/ 3424:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -10984,22 +11034,6 @@ module.exports = {
 	COMMIT_MESSAGE,
 	RETRY_MODE
 };
-
-
-/***/ }),
-
-/***/ 7701:
-/***/ ((module) => {
-
-module.exports = eval("require")("../logger/index");
-
-
-/***/ }),
-
-/***/ 4328:
-/***/ ((module) => {
-
-module.exports = eval("require")("../node-exec");
 
 
 /***/ }),
