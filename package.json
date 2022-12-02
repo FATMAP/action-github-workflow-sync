@@ -4,8 +4,7 @@
  "description": "Github Action To Sync Github Action's Workflow Files Across Repositories",
  "main": "src/index.js",
  "scripts": {
-  "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt ",
-  "prepare-git": "ncc build src/index.js -o dist --source-map --license licenses.txt && git add -f ./dist/** && git commit -m \"Updated\" && git push "
+  "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt "
  },
  "repository": {
   "type": "git",

@@ -10503,6 +10503,37 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 8398:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const nodeexec = __webpack_require__( 4328 );
+const gh_core  = __webpack_require__( 2186 );
+const log      = __webpack_require__( 7701 );
+const toolkit  = __webpack_require__( 6338 );
+
+const findExistingPullRequest = async( local_path ) => {
+	let cmd    = `gh pr list --state=open --search-"minor CHORE Files Sync From ${toolkit.input.env( 'GITHUB_REPOSITORY')}"`;
+	let status = false;
+
+	await nodeexec( `${cmd}`).then( (response) => {
+		log.success( 'Existing PR found' );
+		status = response;
+	} ).catch( ( error ) => {
+		log.error( 'Unable to find an existing PR' );
+		gh_core.error( error );
+		status = false;
+	} );
+	return status;
+};
+
+
+module.exports = {
+    findExistingPullRequest: findExistingPullRequest,
+}
+
+
+/***/ }),
+
 /***/ 6989:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -10664,8 +10695,8 @@ const commitfile = async( local_path, skip_ci, commit_message ) => {
 };
 
 const createPullRequestBranch = async( work_dir, current_branch ) => {
-	let timestamp       = Math.round( ( new Date() ).getTime() / 1000 );
-	let new_branch_name = `file-sync-${toolkit.input.env( 'GITHUB_RUN_NUMBER' )}-${current_branch}-${timestamp}`;
+	let date       = new Date().toISOString().slice(0, 10);
+	let new_branch_name = `${date}-github-file-sync-${toolkit.input.env( 'GITHUB_RUN_NUMBER' )}-${current_branch}`;
 	let status          = true;
 	await toolkit.exec( `git checkout -b ${new_branch_name}`, work_dir ).then( () => {
 		toolkit.log.success( `Pull Request Branch "${new_branch_name}" Created From ${current_branch}`, '	' );
@@ -10696,27 +10727,30 @@ const helper     = __webpack_require__( 6989 );
 const octokit    = __webpack_require__(6762);
 const retry      = __webpack_require__(6298);
 const throttling = __webpack_require__(9968);
+const git_helper = __webpack_require__(8398);
 
 async function run() {
-	let AUTO_CREATE_NEW_BRANCH = __webpack_require__(3424).AUTO_CREATE_NEW_BRANCH;
-	let COMMIT_EACH_FILE       = __webpack_require__(3424).COMMIT_EACH_FILE;
-	let DRY_RUN                = __webpack_require__(3424).DRY_RUN;
-	let GITHUB_TOKEN           = __webpack_require__(3424).GITHUB_TOKEN;
-	let GIT_URL                = __webpack_require__(3424).GIT_URL;
-	let WORKFLOW_FILES_DIR     = __webpack_require__(3424).WORKFLOW_FILES_DIR;
-	let WORKSPACE              = __webpack_require__(3424).WORKSPACE;
-	let REPOSITORIES           = __webpack_require__(3424).REPOSITORIES;
-	let WORKFLOW_FILES         = __webpack_require__(3424).WORKFLOW_FILES;
-	let PULL_REQUEST           = __webpack_require__(3424).PULL_REQUEST;
-	let SKIP_CI                = __webpack_require__(3424).SKIP_CI;
-	let COMMIT_MESSAGE         = __webpack_require__(3424).COMMIT_MESSAGE;
-	let RETRY_MODE             = __webpack_require__(3424).RETRY_MODE;
+	let AUTO_CREATE_NEW_BRANCH       = __webpack_require__(3424).AUTO_CREATE_NEW_BRANCH;
+	let COMMIT_EACH_FILE             = __webpack_require__(3424).COMMIT_EACH_FILE;
+	let DRY_RUN                      = __webpack_require__(3424).DRY_RUN;
+	let GITHUB_TOKEN                 = __webpack_require__(3424).GITHUB_TOKEN;
+	let GIT_URL                      = __webpack_require__(3424).GIT_URL;
+	let WORKFLOW_FILES_DIR           = __webpack_require__(3424).WORKFLOW_FILES_DIR;
+	let WORKSPACE                    = __webpack_require__(3424).WORKSPACE;
+	let REPOSITORIES                 = __webpack_require__(3424).REPOSITORIES;
+	let WORKFLOW_FILES               = __webpack_require__(3424).WORKFLOW_FILES;
+	let PULL_REQUEST                 = __webpack_require__(3424).PULL_REQUEST;
+	let REUSE_PULL_REQUEST           = __webpack_require__(3424).REUSE_PULL_REQUEST;
+	let SKIP_CI                      = __webpack_require__(3424).SKIP_CI;
+	let COMMIT_MESSAGE               = __webpack_require__(3424).COMMIT_MESSAGE;
+	let RETRY_MODE                   = __webpack_require__(3424).RETRY_MODE;
 
 	toolkit.log( '-------------------------------------------------------' );
 	toolkit.log( '⚙️ Basic Config' );
 	toolkit.log( `  * AUTO_CREATE_NEW_BRANCH     : ${AUTO_CREATE_NEW_BRANCH}` );
 	toolkit.log( `  * COMMIT_EACH_FILE           : ${COMMIT_EACH_FILE}` );
 	toolkit.log( `  * PULL_REQUEST               : ${PULL_REQUEST}` );
+	toolkit.log( `  * REUSE_PULL_REQUEST         : ${REUSE_PULL_REQUEST}` );
 	toolkit.log( `  * DRY_RUN                    : ${DRY_RUN}` );
 	toolkit.log( `  * WORKFLOW_FILES_DIR         : ${WORKFLOW_FILES_DIR}` );
 	toolkit.log( `  * WORKSPACE                  : ${WORKSPACE}` );
@@ -10774,6 +10808,7 @@ async function run() {
 		toolkit.log( `	Git URL     : ${git_url}` );
 		toolkit.log( `	Branch      : ${branch}` );
 		toolkit.log( `	Local Path  : ${local_path}` );
+		
 		let status              = await helper.repositoryClone( git_url, local_path, branch, AUTO_CREATE_NEW_BRANCH );
 		let modified            = [];
 		let current_branch      = false;
@@ -10783,7 +10818,9 @@ async function run() {
 
 			if( 'created' !== status ) {
 				current_branch      = ( PULL_REQUEST ) ? await toolkit.git.currentBranch( local_path ) : false;
-				pull_request_branch = ( PULL_REQUEST ) ? await helper.createPullRequestBranch( local_path, current_branch ) : false;
+				existing_pull_request = (REUSE_PULL_REQUEST) ? await git_helper.findExistingPullRequest() : false ;
+				console.log(existing_pull_request)
+				pull_request_branch = ( false === existing_pull_request && PULL_REQUEST ) ? await helper.createPullRequestBranch( local_path, current_branch ) : false;
 			}
 
 			let identity_status = await toolkit.git.identity( local_path, __webpack_require__(3424).GIT_USER, __webpack_require__(3424).GIT_EMAIL, true );
@@ -10912,6 +10949,7 @@ const AUTO_CREATE_NEW_BRANCH = toolkit.input.tobool( core.getInput( 'AUTO_CREATE
 const COMMIT_EACH_FILE       = toolkit.input.tobool( core.getInput( 'COMMIT_EACH_FILE' ) );
 const DRY_RUN                = toolkit.input.tobool( core.getInput( 'DRY_RUN' ) );
 const PULL_REQUEST           = toolkit.input.tobool( core.getInput( 'PULL_REQUEST' ) );
+const REUSE_PULL_REQUEST     = toolkit.input.tobool( core.getInput( 'REUSE_PULL_REQUEST' ) );
 const SKIP_CI                = toolkit.input.tobool( core.getInput( 'SKIP_CI' ) );
 const GITHUB_TOKEN           = core.getInput( 'GITHUB_TOKEN' );
 const GIT_URL                = core.getInput( 'GIT_URL' );
@@ -10927,7 +10965,7 @@ const WORKSPACE              = toolkit.path.dirname( toolkit.path.dirname( GITHU
 
 module.exports = {
 	GIT_USER: 'Workflow Sync Bot',
-	GIT_EMAIL: 'githubactionbot+workflowsync@gmail.com',
+	GIT_EMAIL: 'platform@fatmap.com',
 	AUTO_CREATE_NEW_BRANCH,
 	COMMIT_EACH_FILE,
 	DRY_RUN,
@@ -10935,6 +10973,7 @@ module.exports = {
 	GIT_URL,
 	RAW_REPOSITORIES,
 	PULL_REQUEST,
+	REUSE_PULL_REQUEST,
 	RAW_WORKFLOW_FILES,
 	WORKFLOW_FILES_DIR,
 	REPOSITORIES,
@@ -10945,6 +10984,22 @@ module.exports = {
 	COMMIT_MESSAGE,
 	RETRY_MODE
 };
+
+
+/***/ }),
+
+/***/ 7701:
+/***/ ((module) => {
+
+module.exports = eval("require")("../logger/index");
+
+
+/***/ }),
+
+/***/ 4328:
+/***/ ((module) => {
+
+module.exports = eval("require")("../node-exec");
 
 
 /***/ }),
